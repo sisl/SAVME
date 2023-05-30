@@ -69,7 +69,7 @@ class MetaEnv(object):
         sampled_lf_settings = self.fidelity_settings.sample_from_prior()
 
         #step 3
-        cost, outcome_type, runid = self.run_hf_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings,sampled_lf_settings)
+        cost, outcome_type, runid, t_HF, t_LF = self.run_hf_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings,sampled_lf_settings)
 
         #step 4a
         if np.logical_and(outcome_type in ["TP","TN"],cost<=self.compute_budget):
@@ -100,6 +100,8 @@ class MetaEnv(object):
                              "runid":runid,
                              "scenario":scenario_key,
                              "cost":cost,
+                             "t_HF":t_HF,
+                             "t_LF":t_LF,
                              "outcome_type":outcome_type,
                              "binary_result_scenario":binary_result_scenario,
                              "binary_result_fidelity":binary_result_fidelity,
@@ -146,7 +148,7 @@ class MetaEnv(object):
         sampled_lf_settings = self.fidelity_settings.sample_from_prior()    #for MC still sample don't update in step 4b
 
         #step 3
-        cost, outcome_type, runid = self.run_hf_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings,sampled_lf_settings)
+        cost, outcome_type, runid, t_HF, t_LF = self.run_hf_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings,sampled_lf_settings)
 
         #step 4a
         if np.logical_and(outcome_type in ["TP","TN"],cost<=self.compute_budget):
@@ -174,6 +176,8 @@ class MetaEnv(object):
                              "runid":runid,
                              "scenario":scenario_key,
                              "cost":cost,
+                             "t_HF":t_HF,
+                             "t_LF":t_LF,
                              "outcome_type":outcome_type,
                              "binary_result_scenario":binary_result_scenario,
                              "binary_result_fidelity":binary_result_fidelity,
@@ -188,7 +192,7 @@ class MetaEnv(object):
             pickle.dump(self.history,f)
         
         #step 6
-        print("Eval iteration {}".format(self.train_iter))
+        print("MC iteration {}".format(self.train_iter))
         scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
         fidelity_success_rate = np.mean([h["binary_result_fidelity"] for h in self.history])
         print("Scenario: {} - Cost: {} - Outcome Type: {} - Avg Scenario Success: {} - Avg Fidelity Success: {}".format(scenario_key,cost,outcome_type,scenario_success_rate,fidelity_success_rate))
@@ -216,7 +220,7 @@ class MetaEnv(object):
         sampled_lf_settings = self.fidelity_settings.get_map()   #don't sample, take greedy best result after training
 
         #step 3
-        cost, outcome_type, runid = self.run_hf_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings,sampled_lf_settings)
+        cost, outcome_type, runid, t_HF, t_LF = self.run_hf_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings,sampled_lf_settings)
 
         #step 4a
         if np.logical_and(outcome_type in ["TP","TN"],cost<=self.compute_budget):
@@ -244,6 +248,8 @@ class MetaEnv(object):
                              "runid":runid,
                              "scenario":scenario_key,
                              "cost":cost,
+                             "t_HF":t_HF,
+                             "t_LF":t_LF,
                              "outcome_type":outcome_type,
                              "binary_result_scenario":binary_result_scenario,
                              "binary_result_fidelity":binary_result_fidelity,
@@ -266,274 +272,274 @@ class MetaEnv(object):
         #step 7
         self.train_iter += 1
     
-    def train_one_step_hf_scenario(self,filename="log"): #training to update the counts
-        """
-        1. randomly select one scenario 
-        2. sample scenario_settings anf lf_settings via Thompson sampling
-        3. run scenario using the self.run_hf_lf function
-        4. Process the returns from self.run_hf
-            a. convert return_type (0,1) into success or a failure
-            b. update the scenario_settings but not lf settings
-        5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"hf_config":hf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
-        6. Print statistics
-        7. Update self.train_iter
-        """
-        #step 1
-        print("-"*80)
-        scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
+    # def train_one_step_hf_scenario(self,filename="log"): #training to update the counts
+    #     """
+    #     1. randomly select one scenario 
+    #     2. sample scenario_settings anf lf_settings via Thompson sampling
+    #     3. run scenario using the self.run_hf_lf function
+    #     4. Process the returns from self.run_hf
+    #         a. convert return_type (0,1) into success or a failure
+    #         b. update the scenario_settings but not lf settings
+    #     5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"hf_config":hf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
+    #     6. Print statistics
+    #     7. Update self.train_iter
+    #     """
+    #     #step 1
+    #     print("-"*80)
+    #     scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
 
-        #step 2
-        sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
+    #     #step 2
+    #     sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
 
-        #step 3
-        cost, outcome, runid = self.run_hf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings)
+    #     #step 3
+    #     cost, outcome, runid = self.run_hf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings)
 
-        #step 4a
-        binary_result_scenario = outcome
+    #     #step 4a
+    #     binary_result_scenario = outcome
         
         
-        #step 4b
-        #update scenario_settings
-        self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
+    #     #step 4b
+    #     #update scenario_settings
+    #     self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
     
 
-        #step 5
-        self.history.append({"iteration":self.train_iter,
-                             "runid":runid,
-                             "scenario":scenario_key,
-                             "cost":cost,
-                             "outcome_type":outcome,
-                             "binary_result_scenario":binary_result_scenario,
-                             "scenario_config":sampled_scenario_settings,
-                             "hf_settings":self.hf_settings,
-                             "scenario_settings_state":copy(self.scenarios),
-                             "fidelity_settings_state":copy(self.fidelity_settings),
-                             "compute_budget":self.compute_budget})
+    #     #step 5
+    #     self.history.append({"iteration":self.train_iter,
+    #                          "runid":runid,
+    #                          "scenario":scenario_key,
+    #                          "cost":cost,
+    #                          "outcome_type":outcome,
+    #                          "binary_result_scenario":binary_result_scenario,
+    #                          "scenario_config":sampled_scenario_settings,
+    #                          "hf_settings":self.hf_settings,
+    #                          "scenario_settings_state":copy(self.scenarios),
+    #                          "fidelity_settings_state":copy(self.fidelity_settings),
+    #                          "compute_budget":self.compute_budget})
         
-        with open("{}.pkl".format("./results/"+filename),"wb") as f:
-            pickle.dump(self.history,f)
+    #     with open("{}.pkl".format("./results/"+filename),"wb") as f:
+    #         pickle.dump(self.history,f)
         
-        #step 6
-        print("Training iteration {}".format(self.train_iter))
-        scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
-        print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
+    #     #step 6
+    #     print("Training iteration {}".format(self.train_iter))
+    #     scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
+    #     print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
 
-        #step 7
-        self.train_iter += 1
+    #     #step 7
+    #     self.train_iter += 1
     
-    def eval_one_step_hf(self,filename="log"): #training to update the counts
-        """
-        1. randomly select one scenario 
-        2. sample scenario_settings via Thompson sampling
-        3. run scenario using the self.run_hf function
-        4. Process the returns from self.run_hf
-            a. convert return_type (0,1) into success or a failure
-        5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"hf_config":hf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
-        6. Print statistics
-        7. Update self.train_iter
-        """
-        #step 1
-        print("-"*80)
-        scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
+    # def eval_one_step_hf(self,filename="log"): #training to update the counts
+    #     """
+    #     1. randomly select one scenario 
+    #     2. sample scenario_settings via Thompson sampling
+    #     3. run scenario using the self.run_hf function
+    #     4. Process the returns from self.run_hf
+    #         a. convert return_type (0,1) into success or a failure
+    #     5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"hf_config":hf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
+    #     6. Print statistics
+    #     7. Update self.train_iter
+    #     """
+    #     #step 1
+    #     print("-"*80)
+    #     scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
 
-        #step 2
-        sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
+    #     #step 2
+    #     sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
 
-        #step 3
-        cost, outcome, runid = self.run_hf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings)
+    #     #step 3
+    #     cost, outcome, runid = self.run_hf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,self.hf_settings)
 
-        #step 4a
-        binary_result_scenario = outcome
+    #     #step 4a
+    #     binary_result_scenario = outcome
         
         
-        #step 4b
-        #don't update scenario_settings
-        # self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
-    
-
-        #step 5
-        self.history.append({"iteration":self.train_iter,
-                             "runid":runid,
-                             "scenario":scenario_key,
-                             "cost":cost,
-                             "outcome_type":outcome,
-                             "binary_result_scenario":binary_result_scenario,
-                             "scenario_config":sampled_scenario_settings,
-                             "hf_settings":self.hf_settings,
-                             "scenario_settings_state":copy(self.scenarios),
-                             "fidelity_settings_state":copy(self.fidelity_settings),
-                             "compute_budget":self.compute_budget})
-        
-        with open("{}.pkl".format("./results/"+filename),"wb") as f:
-            pickle.dump(self.history,f)
-        
-        #step 6
-        print("Training iteration {}".format(self.train_iter))
-        scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
-        print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
-
-        #step 7
-        self.train_iter += 1
-    
-    def train_one_step_lf_scenario(self,filename="log"): #training to update the counts
-        """
-        1. randomly select one scenario 
-        2. sample scenario_settings and lf_settings via Thompson sampling
-        3. run scenario using the self.run_lf function
-        4. Process the returns from self.run_lf
-            a. convert return_type (0,1) into success or a failure
-            b. update scenario settings
-        5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"lf_config":lf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
-        6. Print statistics
-        7. Update self.train_iter
-        """
-        #step 1
-        print("-"*80)
-        scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
-
-        #step 2
-        sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
-        sampled_lf_settings = self.fidelity_settings.get_map()   #don't sample, take greedy best result after training
-
-        #step 3
-        cost, outcome, runid = self.run_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,sampled_lf_settings)
-
-        #step 4a
-        binary_result_scenario = outcome
-        
-        
-        #step 4b
-        #update scenario_settings
-        self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
+    #     #step 4b
+    #     #don't update scenario_settings
+    #     # self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
     
 
-        #step 5
-        self.history.append({"iteration":self.train_iter,
-                             "runid":runid,
-                             "scenario":scenario_key,
-                             "cost":cost,
-                             "outcome_type":outcome,
-                             "binary_result_scenario":binary_result_scenario,
-                             "scenario_config":sampled_scenario_settings,
-                             "lf_settings":sampled_lf_settings,
-                             "scenario_settings_state":copy(self.scenarios),
-                             "fidelity_settings_state":copy(self.fidelity_settings),
-                             "compute_budget":self.compute_budget})
+    #     #step 5
+    #     self.history.append({"iteration":self.train_iter,
+    #                          "runid":runid,
+    #                          "scenario":scenario_key,
+    #                          "cost":cost,
+    #                          "outcome_type":outcome,
+    #                          "binary_result_scenario":binary_result_scenario,
+    #                          "scenario_config":sampled_scenario_settings,
+    #                          "hf_settings":self.hf_settings,
+    #                          "scenario_settings_state":copy(self.scenarios),
+    #                          "fidelity_settings_state":copy(self.fidelity_settings),
+    #                          "compute_budget":self.compute_budget})
         
-        with open("{}.pkl".format("./results/"+filename),"wb") as f:
-            pickle.dump(self.history,f)
+    #     with open("{}.pkl".format("./results/"+filename),"wb") as f:
+    #         pickle.dump(self.history,f)
         
-        #step 6
-        print("Training iteration {}".format(self.train_iter))
-        scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
-        print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
+    #     #step 6
+    #     print("Training iteration {}".format(self.train_iter))
+    #     scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
+    #     print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
 
-        #step 7
-        self.train_iter += 1
+    #     #step 7
+    #     self.train_iter += 1
     
-    def eval_one_step_lf(self,filename="log"): #training to update the counts
-        """
-        1. randomly select one scenario 
-        2. sample scenario_settings and lf_settings via MAP
-        3. run scenario using the self.run_lf function
-        4. Process the returns from self.run_lf
-            a. convert return_type (0,1) into success or a failure
-        5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"lf_config":lf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
-        6. Print statistics
-        7. Update self.train_iter
-        """
-        #step 1
-        print("-"*80)
-        scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
+    # def train_one_step_lf_scenario(self,filename="log"): #training to update the counts
+    #     """
+    #     1. randomly select one scenario 
+    #     2. sample scenario_settings and lf_settings via Thompson sampling
+    #     3. run scenario using the self.run_lf function
+    #     4. Process the returns from self.run_lf
+    #         a. convert return_type (0,1) into success or a failure
+    #         b. update scenario settings
+    #     5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"lf_config":lf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
+    #     6. Print statistics
+    #     7. Update self.train_iter
+    #     """
+    #     #step 1
+    #     print("-"*80)
+    #     scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
 
-        #step 2
-        sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
-        sampled_lf_settings = self.fidelity_settings.get_map()   #don't sample, take greedy best result after training
+    #     #step 2
+    #     sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
+    #     sampled_lf_settings = self.fidelity_settings.get_map()   #don't sample, take greedy best result after training
 
-        #step 3
-        cost, outcome, runid = self.run_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,sampled_lf_settings)
+    #     #step 3
+    #     cost, outcome, runid = self.run_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,sampled_lf_settings)
 
-        #step 4a
-        binary_result_scenario = outcome
+    #     #step 4a
+    #     binary_result_scenario = outcome
         
         
-        #step 4b
-        #update scenario_settings
-        # self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
+    #     #step 4b
+    #     #update scenario_settings
+    #     self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
     
 
-        #step 5
-        self.history.append({"iteration":self.train_iter,
-                             "runid":runid,
-                             "scenario":scenario_key,
-                             "cost":cost,
-                             "outcome_type":outcome,
-                             "binary_result_scenario":binary_result_scenario,
-                             "scenario_config":sampled_scenario_settings,
-                             "lf_settings":sampled_lf_settings,
-                             "scenario_settings_state":copy(self.scenarios),
-                             "fidelity_settings_state":copy(self.fidelity_settings),
-                             "compute_budget":self.compute_budget})
+    #     #step 5
+    #     self.history.append({"iteration":self.train_iter,
+    #                          "runid":runid,
+    #                          "scenario":scenario_key,
+    #                          "cost":cost,
+    #                          "outcome_type":outcome,
+    #                          "binary_result_scenario":binary_result_scenario,
+    #                          "scenario_config":sampled_scenario_settings,
+    #                          "lf_settings":sampled_lf_settings,
+    #                          "scenario_settings_state":copy(self.scenarios),
+    #                          "fidelity_settings_state":copy(self.fidelity_settings),
+    #                          "compute_budget":self.compute_budget})
         
-        with open("{}.pkl".format("./results/"+filename),"wb") as f:
-            pickle.dump(self.history,f)
+    #     with open("{}.pkl".format("./results/"+filename),"wb") as f:
+    #         pickle.dump(self.history,f)
         
-        #step 6
-        print("Training iteration {}".format(self.train_iter))
-        scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
-        print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
+    #     #step 6
+    #     print("Training iteration {}".format(self.train_iter))
+    #     scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
+    #     print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
 
-        #step 7
-        self.train_iter += 1
+    #     #step 7
+    #     self.train_iter += 1
+    
+    # def eval_one_step_lf(self,filename="log"): #training to update the counts
+    #     """
+    #     1. randomly select one scenario 
+    #     2. sample scenario_settings and lf_settings via MAP
+    #     3. run scenario using the self.run_lf function
+    #     4. Process the returns from self.run_lf
+    #         a. convert return_type (0,1) into success or a failure
+    #     5. Save all the results into a list of dictionaries {"iteration":self.train_iter,"runid":runid,"scenario":scenario_id,"cost":cost,"outcome_type":outcome_type,"scenario_config":scenario_config,"lf_config":lf_config,"scenario_settings_state":copy(scenario_settings),"fidelity_settings_state":copy(fidelity_settings)}
+    #     6. Print statistics
+    #     7. Update self.train_iter
+    #     """
+    #     #step 1
+    #     print("-"*80)
+    #     scenario_key = random.choices(self.scenarios_keys,weights=[self.scenarios[k]["weight"] for k in self.scenarios_keys])[0]
+
+    #     #step 2
+    #     sampled_scenario_settings = self.scenarios[scenario_key]["settings"].sample_from_prior()
+    #     sampled_lf_settings = self.fidelity_settings.get_map()   #don't sample, take greedy best result after training
+
+    #     #step 3
+    #     cost, outcome, runid = self.run_lf(self.scenarios[scenario_key]["scenario"],sampled_scenario_settings,sampled_lf_settings)
+
+    #     #step 4a
+    #     binary_result_scenario = outcome
+        
+        
+    #     #step 4b
+    #     #update scenario_settings
+    #     # self.scenarios[scenario_key]["settings"].update_prior(binary_result_scenario,sampled_scenario_settings)
+    
+
+    #     #step 5
+    #     self.history.append({"iteration":self.train_iter,
+    #                          "runid":runid,
+    #                          "scenario":scenario_key,
+    #                          "cost":cost,
+    #                          "outcome_type":outcome,
+    #                          "binary_result_scenario":binary_result_scenario,
+    #                          "scenario_config":sampled_scenario_settings,
+    #                          "lf_settings":sampled_lf_settings,
+    #                          "scenario_settings_state":copy(self.scenarios),
+    #                          "fidelity_settings_state":copy(self.fidelity_settings),
+    #                          "compute_budget":self.compute_budget})
+        
+    #     with open("{}.pkl".format("./results/"+filename),"wb") as f:
+    #         pickle.dump(self.history,f)
+        
+    #     #step 6
+    #     print("Training iteration {}".format(self.train_iter))
+    #     scenario_success_rate = np.mean([h["binary_result_scenario"] for h in self.history])
+    #     print("Scenario: {} - Cost: {} - Outcome: {} - Avg Scenario Success: {}".format(scenario_key,cost,outcome,scenario_success_rate))
+
+    #     #step 7
+    #     self.train_iter += 1
 
     
-    def meta_test_train_hf(self,n,filename="log"):
-        start_time = time.time()
-        for i in tqdm(range(n)):
-            self.train_one_step_hf_scenario(filename=filename)
+    # def meta_test_train_hf(self,n,filename="log"):
+    #     start_time = time.time()
+    #     for i in tqdm(range(n)):
+    #         self.train_one_step_hf_scenario(filename=filename)
         
-        #save the last scenario_settings
-        with open("{}.pkl".format("./results/"+filename+"_final_scenario_settings"),"wb") as f:
-            pickle.dump(self.scenarios,f)
+    #     #save the last scenario_settings
+    #     with open("{}.pkl".format("./results/"+filename+"_final_scenario_settings"),"wb") as f:
+    #         pickle.dump(self.scenarios,f)
         
-        self.history = []
-        self.train_iter = 0
-        end_time = time.time()
-        print("Entire Simulation Time: ",end_time-start_time)
+    #     self.history = []
+    #     self.train_iter = 0
+    #     end_time = time.time()
+    #     print("Entire Simulation Time: ",end_time-start_time)
 
-    def meta_test_eval_hf(self,n,filename="log"):
-        start_time = time.time()
-        for i in tqdm(range(n)):
-            self.eval_one_step_hf(filename=filename)
+    # def meta_test_eval_hf(self,n,filename="log"):
+    #     start_time = time.time()
+    #     for i in tqdm(range(n)):
+    #         self.eval_one_step_hf(filename=filename)
         
-        self.history = []
-        self.train_iter = 0
-        end_time = time.time()
-        print("Entire Simulation Time: ",end_time-start_time)
+    #     self.history = []
+    #     self.train_iter = 0
+    #     end_time = time.time()
+    #     print("Entire Simulation Time: ",end_time-start_time)
     
-    def meta_test_train_lf(self,n,filename="log"):
-        start_time = time.time()
-        for i in tqdm(range(n)):
-            self.train_one_step_lf_scenario(filename=filename)
+    # def meta_test_train_lf(self,n,filename="log"):
+    #     start_time = time.time()
+    #     for i in tqdm(range(n)):
+    #         self.train_one_step_lf_scenario(filename=filename)
         
-        #save the last scenario_settings
-        with open("{}.pkl".format("./results/"+filename+"_final_scenario_settings"),"wb") as f:
-            pickle.dump(self.scenarios,f)
+    #     #save the last scenario_settings
+    #     with open("{}.pkl".format("./results/"+filename+"_final_scenario_settings"),"wb") as f:
+    #         pickle.dump(self.scenarios,f)
         
-        self.history = []
-        self.train_iter = 0
-        end_time = time.time()
-        print("Entire Simulation Time: ",end_time-start_time)
+    #     self.history = []
+    #     self.train_iter = 0
+    #     end_time = time.time()
+    #     print("Entire Simulation Time: ",end_time-start_time)
 
-    def meta_test_eval_lf(self,n,filename="log"):
-        start_time = time.time()
-        for i in tqdm(range(n)):
-            self.eval_one_step_lf(filename=filename)
+    # def meta_test_eval_lf(self,n,filename="log"):
+    #     start_time = time.time()
+    #     for i in tqdm(range(n)):
+    #         self.eval_one_step_lf(filename=filename)
         
-        self.history = []
-        self.train_iter = 0
-        end_time = time.time()
-        print("Entire Simulation Time: ",end_time-start_time)
+    #     self.history = []
+    #     self.train_iter = 0
+    #     end_time = time.time()
+    #     print("Entire Simulation Time: ",end_time-start_time)
 
     def train(self,n,filename="log"): #run n simulations
         start_time = time.time()
