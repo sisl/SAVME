@@ -1,3 +1,9 @@
 #SAVME/__pycache__/
 #scenarios/__pycache__/
 #system_under_test/__pycache__/
+veryify_results.py
+verify_met_test_results.py
+test_pendulum.py
+meta_training_plot.py
+meta_testing_plot.py
+get_results_after_meta_training.py

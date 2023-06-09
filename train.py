@@ -43,71 +43,25 @@ high_fidelity_settings = {"BINS_X":100,
 ######################################################################
 meta_env = MetaEnv(scenarios_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.1)
 meta_env.mc(1000,"mc_test")
-# print("stop")
+
 
 ###########################META-TRAINING##############################
 meta_env = MetaEnv(scenarios_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.1) #The MetaEnv object handles all the training, evaluation, and testing. We need to pass it the scenarios alongside with their configurations, the high-fidelity settings, the fidelity setting configurations (for the learned-fidelity settings), the run_hf_lf functions and the compute budget. The compute budget is the target fraction of time_LF and time_HF. For more details, see the paper.
 meta_env.train(1000,"train_0_1")
 meta_env.eval(100,"eval_0_1")
-print("stop")
 
-# # meta_env = MetaEnv(scenarios_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.4)
-# # meta_env.train(500,"007_C")
-# # meta_env.eval(100,"008_C")
-
-# # meta_env = MetaEnv(scenarios_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.3)
-# # meta_env.train(500,"010_C")
-# # meta_env.eval(100,"011_C")
-
-# meta_env = MetaEnv(scenarios_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.2)
-# meta_env.train(500,"012_C")
-# meta_env.eval(100,"013_C")
 
 # ####################NEW META-TESTING################################################
-# #######020########
 # #starting from scratch
-# meta_env_no_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.3)
-# meta_env_no_prior.train(200,"020_C_no_prior_train")
-# # meta_env_no_prior = load_from_file("./results/020_B_no_prior_train.pkl",run_hf_lf,compute_budget=0.3)
-# # meta_env_no_prior.train_iter = 0
-# # meta_env_no_prior.history = []
-# meta_env_no_prior.eval(100,"020_C_no_prior_eval")
+meta_env_no_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.1)
+meta_env_no_prior.train(1000,"test_0_1_no_prior")
+meta_env_no_prior.eval(100,"eval_0_1_no_prior")
 
-# #starting with prior
-# with open("./results/010_C.pkl","rb") as f:   #010 is the training with budget 0.3
-#     data = pickle.load(f)
+# starting with prior
+with open("./results/train_0_1","rb") as f:   
+    data = pickle.load(f)
 
-# extracted_fidelity_settings = data[-1]["fidelity_settings_state"]
-# meta_env_w_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,extracted_fidelity_settings,run_hf_lf,compute_budget=0.3)
-# meta_env_w_prior.train(200,"020_C_w_prior_train")
-# meta_env_w_prior.eval(100,"020_C_w_prior_eval")
-
-# #######021########
-# #starting from scratch
-# meta_env_no_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.4)
-# meta_env_no_prior.train(200,"021_C_no_prior_train")
-# meta_env_no_prior.eval(100,"021_C_no_prior_eval")
-
-# #starting with prior
-# with open("./results/007_C.pkl","rb") as f:   #007 is the training with budget 0.4
-#     data = pickle.load(f)
-
-# extracted_fidelity_settings = data[-1]["fidelity_settings_state"]
-# meta_env_w_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,extracted_fidelity_settings,run_hf_lf,compute_budget=0.4)
-# meta_env_w_prior.train(200,"021_C_w_prior_train")
-# meta_env_w_prior.eval(100,"021_C_w_prior_eval")
-
-# #######022########
-# #starting from scratch
-# meta_env_no_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.2)
-# meta_env_no_prior.train(200,"022_C_no_prior_train")
-# meta_env_no_prior.eval(100,"022_C_no_prior_eval")
-
-# #starting with prior
-# with open("./results/012_C.pkl","rb") as f:   #012 is the training with budget 0.2
-#     data = pickle.load(f)
-
-# extracted_fidelity_settings = data[-1]["fidelity_settings_state"]
-# meta_env_w_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,extracted_fidelity_settings,run_hf_lf,compute_budget=0.2)
-# meta_env_w_prior.train(200,"022_C_w_prior_train")
-# meta_env_w_prior.eval(100,"022_C_w_prior_eval")
+extracted_fidelity_settings = data[-1]["fidelity_settings_state"]
+meta_env_w_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,extracted_fidelity_settings,run_hf_lf,compute_budget=0.1)
+meta_env_w_prior.train(1000,"test_0_1_w_prior")
+meta_env_w_prior.eval(100,"eval_0_1_w_prior")
