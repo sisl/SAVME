@@ -42,13 +42,13 @@ high_fidelity_settings = {"BINS_X":100,
 ###########################EXPERIMENTS################################
 ######################################################################
 meta_env = MetaEnv(scenarios_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.1)
-meta_env.mc(1000,"mc_test")
+meta_env.mc(1000,"mc_test") #the mc method randomly chooses the scenario configuration as well as the learned-fidelity settings from a uniform distribution over all settings
 
 
 ###########################META-TRAINING##############################
 meta_env = MetaEnv(scenarios_with_config,high_fidelity_settings,fidelity_settings,run_hf_lf,compute_budget=0.1) #The MetaEnv object handles all the training, evaluation, and testing. We need to pass it the scenarios alongside with their configurations, the high-fidelity settings, the fidelity setting configurations (for the learned-fidelity settings), the run_hf_lf functions and the compute budget. The compute budget is the target fraction of time_LF and time_HF. For more details, see the paper.
-meta_env.train(1000,"train_0_1")
-meta_env.eval(100,"eval_0_1")
+meta_env.train(1000,"train_0_1") #train the model
+meta_env.eval(100,"eval_0_1") #evaluation, so the fidelity settings are chosen via the MAP estimate, but we still sample from the scenario settings
 
 
 # ####################NEW META-TESTING################################################
@@ -58,10 +58,10 @@ meta_env_no_prior.train(1000,"test_0_1_no_prior")
 meta_env_no_prior.eval(100,"eval_0_1_no_prior")
 
 # starting with prior
-with open("./results/train_0_1","rb") as f:   
+with open("./results/train_0_1","rb") as f:   #load the settings from meta-training
     data = pickle.load(f)
 
-extracted_fidelity_settings = data[-1]["fidelity_settings_state"]
+extracted_fidelity_settings = data[-1]["fidelity_settings_state"]   #get the last fidelity settings (you can also get that from the meta_env object directly)
 meta_env_w_prior = MetaEnv(scenarios_meta_test_with_config,high_fidelity_settings,extracted_fidelity_settings,run_hf_lf,compute_budget=0.1)
 meta_env_w_prior.train(1000,"test_0_1_w_prior")
 meta_env_w_prior.eval(100,"eval_0_1_w_prior")
