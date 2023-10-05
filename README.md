@@ -1,2 +1,2 @@
-# SAVEM - Efficient Safety Validation for Autonomous Systems Using Meta-Learning
+# SAVME - Efficient Safety Validation for Autonomous Systems Using Meta-Learning
 The code is in the process of being updated before the presentation at ITSC 2023. A detailed example for the paper including how to use the code for that example will be added here before the conference start date. In the meantime, the `train.py` file which is fully documented contains a dummy example that shows how our code can be used and how to integrate your own system.
